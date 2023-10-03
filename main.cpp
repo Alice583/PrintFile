@@ -38,8 +38,37 @@ void checkCorrectness(int argc, char** argv){
     else{
         for (int i = 1; i < argc - 1; ++i) {
 //            std::cout << argv[i];
-            std::string s = "-l";
-            if (argv[i] == s){ std::wcout << L"Оки";}
+//            std::string s = "-l";
+            if (argv[i][0] == '-' && argv[i][1] == 'l'){
+                lines();
+                std::wcout << L"Оки";
+            }
+            else if (argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == 'l' && argv[i][3] == 'i' &&
+            argv[i][4] == 'n' && argv[i][5] == 'e' && argv[i][6] == 's'){
+                lines();
+                std::wcout << L"Оки";
+            }
+            else if (argv[i][0] == '-' && argv[i][1] == 't'){
+                tail();
+                std::wcout << L"Оки";
+            }
+            else if (argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == 't' && argv[i][3] == 'a' &&
+                     argv[i][4] == 'i' && argv[i][5] == 'l'){
+                tail();
+                std::wcout << L"Оки";
+
+            }
+            else if (argv[i][0] == '-' && argv[i][1] == 'd'){
+                delimiter();
+                std::wcout << L"Оки";
+            }
+            else if (argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == 'd' && argv[i][3] == 'e' &&
+                     argv[i][4] == 'l' && argv[i][5] == 'i' && argv[i][6] == 'm' && argv[i][7] == 'i' &&
+                     argv[i][8] == 't' && argv[i][9] == 'e' && argv[i][10] == 'r'){
+                delimiter();
+                std::wcout << L"Оки";
+
+            }
             else{
                 std::wcout << L"Извините, такой команды нет.";
             }
