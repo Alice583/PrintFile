@@ -2,7 +2,6 @@
 #include <fstream>
 
 // исправить ошибку с делимитром
-// брать у строк после =
 // tail
 
 
@@ -29,16 +28,33 @@ void printFile(std::string filename, long long n, bool t, char d){
         }
         else{
             if (t){
-//                char s1;
-                int count = 0;
-                filenameForOpen.seekg(0, std::ios::end);
-//                filenameForOpen.seekg(-1, std::ios::cur);
-//                filenameForOpen.seekg(n, std::ios::end);
-                while(getline(filenameForOpen, s) && count < 10){
-                    count++;
-                    filenameForOpen.seekg(-1, std::ios::cur);
-                    std::cout << s;
+                int count = 1;
+                filenameForOpen.seekg(-1,std::ios::end);
+                bool keepLooping = true;
+                while(keepLooping) {
+                    char ch;
+                    filenameForOpen.get(ch);
+                    if((int)filenameForOpen.tellg() <= 1) {
+                        filenameForOpen.seekg(0);
+                        keepLooping = false;
+                    }
+                    else if(ch == d) {
+                        count++;
+//                        filenameForOpen.seekg(-3,std::ios::cur);
+                    }
+                    else if (count == n){
+                        keepLooping = false;
+                    }
+                    else {
+                        filenameForOpen.seekg(-2,std::ios::cur);
+                    }
+                    std::cout << count;
                 }
+//                while(getline(filenameForOpen, s)){
+//                    std::cout << s;
+//                }
+                getline(filenameForOpen, s);
+                std::cout << s;
             }
             else{
                 int count = 1;
@@ -53,13 +69,14 @@ void printFile(std::string filename, long long n, bool t, char d){
 }
 
 
-//int charToInt(char* a){
-//    int count = 0;
-//    while (a[count] != '\0'){
-//
-//        count++;
-//    }
-//}
+std::string charToInt(char* a, int count){
+    std::string num;
+    while (a[count] != '\0'){
+        num += a[count];
+        count++;
+    }
+    return num;
+}
 
 
 // функция для проверки введенных значений пользователем и вызовом нужных функций
@@ -76,19 +93,17 @@ void checkCorrectness(int argc, char** argv) {
                 i++;
             } else if (argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == 'l' && argv[i][3] == 'i' &&
                         argv[i][4] == 'n' && argv[i][5] == 'e' && argv[i][6] == 's' && argv[i][7] == '=') {
+                argumentsStd.lines = (std::stoi(charToInt(argv[i], 8)));
 
-
-                std::wcout << L"Оки";
             } else if (argv[i][0] == '-' && argv[i][1] == 't' && argv[i][2] == '\0') {
                 argumentsStd.from_tail = true;
             } else if (argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == 't' && argv[i][3] == 'a' &&
                         argv[i][4] == 'i' && argv[i][5] == 'l' && argv[i][6] == '\0') {
-
-                std::wcout << L"Оки";
+                argumentsStd.from_tail = true;
 
                 // исправить
             } else if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2] == '\0') {
-//                argumentsStd.delimiter = argv[i + 1];
+//                argumentsStd.delimiter = (char)argv[i + 1];
                 i++;
 
             } else if (argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == 'd' && argv[i][3] == 'e' &&
