@@ -14,20 +14,21 @@ struct ArgumentsSTD {
 
 
 // функция для печати содержимого из файла
-void printFile(std::string filename, long long n, bool t, char d){
-    std::ifstream filenameForOpen(filename);
+void printFile(ArgumentsSTD* argumentsStd){
+    std::ifstream filenameForOpen(argumentsStd->filename);
     std::string s;
+    char symb;
     if (!filenameForOpen){
         std::wcout << L"Файл не открыт или введен неверно" << "\n";
     }
     else{
-        if (n == -1){
-            while(getline(filenameForOpen, s, d)){
-                std::cout << s << std::endl;
+        if (argumentsStd->lines == -1){
+            while (filenameForOpen.get(symb)){
+                std::cout << symb;
             }
         }
         else{
-            if (t){
+            if (argumentsStd->from_tail){
                 int count = 1;
                 filenameForOpen.seekg(-1,std::ios::end);
                 bool keepLooping = true;
@@ -38,15 +39,21 @@ void printFile(std::string filename, long long n, bool t, char d){
                         filenameForOpen.seekg(0);
                         keepLooping = false;
                     }
-                    else if(ch == d) {
+                    else if(ch == argumentsStd->delimiter) {
                         count++;
-//                        filenameForOpen.seekg(-3,std::ios::cur);
+                        if (count == argumentsStd->lines){
+                            keepLooping = false;
+                        }
+                        else{
+                            filenameForOpen.seekg(-2, std::ios::cur);
+                        }
+
                     }
-                    else if (count == n){
-                        keepLooping = false;
-                    }
+//                    if (count == n){
+//                        keepLooping = false;
+//                    }
                     else {
-                        filenameForOpen.seekg(-2,std::ios::cur);
+                        filenameForOpen.seekg(-2, std::ios::cur);
                     }
                     std::cout << count;
                 }
@@ -58,10 +65,24 @@ void printFile(std::string filename, long long n, bool t, char d){
             }
             else{
                 int count = 1;
-                while(getline(filenameForOpen, s, d) && count <= n){
-                    std::cout << s << std::endl;
-                    count++;
+                while (filenameForOpen.get(symb) && count <= argumentsStd->lines){
+                    if (argumentsStd->delimiter != '\n' && symb == '\n'){
+                        filenameForOpen.get();
+                        continue;
+                    }
+                    std::cout << symb;
+                    if (symb == argumentsStd->delimiter){
+                        if (argumentsStd->delimiter != '\n'){
+                            std::cout << '\n';
+                        }
+                        count++;
+                    }
+
                 }
+//                while(getline(filenameForOpen, s, argumentsStd->delimiter) && count <= argumentsStd->lines){
+//                    std::cout << s << std::endl;
+//                    count++;
+//                }
             }
         }
     }
@@ -103,22 +124,21 @@ void checkCorrectness(int argc, char** argv) {
 
                 // исправить
             } else if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2] == '\0') {
-//                argumentsStd.delimiter = (char)argv[i + 1];
+                argumentsStd.delimiter = argv[i + 1][0];
+                std::cout << argv[i + 1][0];
                 i++;
 
             } else if (argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == 'd' && argv[i][3] == 'e' &&
                         argv[i][4] == 'l' && argv[i][5] == 'i' && argv[i][6] == 'm' && argv[i][7] == 'i' &&
                         argv[i][8] == 't' && argv[i][9] == 'e' && argv[i][10] == 'r' && argv[i][11] == '=') {
-
-                std::wcout << L"Оки";
-
+                argumentsStd.delimiter = argv[i][12];
             } else {
                 argumentsStd.filename = argv[i];
             }
 
         }
     }
-    printFile(argumentsStd.filename, argumentsStd.lines, argumentsStd.from_tail, argumentsStd.delimiter);
+    printFile(&argumentsStd);
 }
 
 
