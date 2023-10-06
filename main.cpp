@@ -1,88 +1,51 @@
 #include <iostream>
 #include <fstream>
+#include <cstring>
+#include <limits>
 
-// исправить ошибку с делимитром
 // tail
 
-
 struct ArgumentsSTD {
-    long long lines = -1;
+    unsigned long long lines = std::numeric_limits<unsigned long long>::max();
     bool from_tail = false;
     char delimiter = '\n';
     std::string filename;
 };
 
 
-// функция для печати содержимого из файла
-void printFile(ArgumentsSTD* argumentsStd){
+void toBegin(ArgumentsSTD* argumentsStd) {
     std::ifstream filenameForOpen(argumentsStd->filename);
-    std::string s;
     char symb;
-    if (!filenameForOpen){
+    if (!filenameForOpen) {
         std::wcout << L"Файл не открыт или введен неверно" << "\n";
-    }
-    else{
-        if (argumentsStd->lines == -1){
-            while (filenameForOpen.get(symb)){
+    } else {
+        if (argumentsStd->lines == -1) {
+            while (filenameForOpen.get(symb) && filenameForOpen.good()) {
+                if (argumentsStd->delimiter != '\n' && symb == '\n') {
+                    continue;
+                }
                 std::cout << symb;
+                if (symb == argumentsStd->delimiter) {
+                    if (argumentsStd->delimiter != '\n') {
+                        std::cout << '\n';
+                    }
+                }
+
             }
         }
         else{
-            if (argumentsStd->from_tail){
-                int count = 1;
-                filenameForOpen.seekg(-1,std::ios::end);
-                bool keepLooping = true;
-                while(keepLooping) {
-                    char ch;
-                    filenameForOpen.get(ch);
-                    if((int)filenameForOpen.tellg() <= 1) {
-                        filenameForOpen.seekg(0);
-                        keepLooping = false;
-                    }
-                    else if(ch == argumentsStd->delimiter) {
-                        count++;
-                        if (count == argumentsStd->lines){
-                            keepLooping = false;
-                        }
-                        else{
-                            filenameForOpen.seekg(-2, std::ios::cur);
-                        }
-
-                    }
-//                    if (count == n){
-//                        keepLooping = false;
-//                    }
-                    else {
-                        filenameForOpen.seekg(-2, std::ios::cur);
-                    }
-                    std::cout << count;
+            int count = 1;
+            while (filenameForOpen.get(symb) && filenameForOpen.good() && count <= argumentsStd->lines){
+                if (argumentsStd->delimiter != '\n' && symb == '\n'){
+                    continue;
                 }
-//                while(getline(filenameForOpen, s)){
-//                    std::cout << s;
-//                }
-                getline(filenameForOpen, s);
-                std::cout << s;
-            }
-            else{
-                int count = 1;
-                while (filenameForOpen.get(symb) && count <= argumentsStd->lines){
-                    if (argumentsStd->delimiter != '\n' && symb == '\n'){
-                        filenameForOpen.get();
-                        continue;
+                std::cout << symb;
+                if (symb == argumentsStd->delimiter){
+                    if (argumentsStd->delimiter != '\n'){
+                        std::cout << '\n';
                     }
-                    std::cout << symb;
-                    if (symb == argumentsStd->delimiter){
-                        if (argumentsStd->delimiter != '\n'){
-                            std::cout << '\n';
-                        }
-                        count++;
-                    }
-
+                    count++;
                 }
-//                while(getline(filenameForOpen, s, argumentsStd->delimiter) && count <= argumentsStd->lines){
-//                    std::cout << s << std::endl;
-//                    count++;
-//                }
             }
         }
     }
@@ -90,59 +53,120 @@ void printFile(ArgumentsSTD* argumentsStd){
 }
 
 
-std::string charToInt(char* a, int count){
-    std::string num;
-    while (a[count] != '\0'){
-        num += a[count];
-        count++;
+void toEnd(ArgumentsSTD* argumentsStd){
+    unsigned long long count = 0;
+    char ch;
+    std::ifstream filenameForOpen(argumentsStd->filename, std::ios::ate);
+    if (!filenameForOpen) {
+        std::wcout << L"Файл не открыт или введен неверно" << "\n";
     }
-    return num;
+    while(count < argumentsStd->lines && filenameForOpen.good()) {
+        filenameForOpen.seekg(-1, std::ios::cur);
+        filenameForOpen.get(ch);
+        if (ch == argumentsStd->delimiter) {
+            std::cout << "this /n" << ch;
+            count++;
+        }
+        filenameForOpen.seekg(-1, std::ios::cur);
+        std::cout << ch;
+    }
+    char symb;
+    while (filenameForOpen.get(symb) && filenameForOpen.good()){
+//        if (argumentsStd->delimiter != '\n' && symb == '\n'){
+//            continue;
+//        }
+        std::cout << symb;
+//        if (symb == argumentsStd->delimiter) {
+//            if (argumentsStd->delimiter != '\n') {
+//                std::cout << '\n';
+//            }
+//        }
+
+    }
+    filenameForOpen.close();
+}
+
+
+//unsigned long long charToInt(char* a, int count){
+//    char* num = nullptr;
+//    while (a[count] != '\0'){
+//        num += a[count];
+//        count++;
+//    }
+//    return std::stoull(num);
+//}
+
+
+char getDelimiter(char* args){
+    if (strlen(args) == 1){
+        return args[0];
+    }
+    else if (args[0] == '\\'){
+        if (args[1] == 'n'){
+            return '\n';
+        }
+        else if (args[1] == 't'){
+            return '\t';
+        }
+        else if (args[1] == 'v'){
+            return '\v';
+        }
+        else if (args[1] == '0'){
+            return '\0';
+        }
+    }
+    if (strlen(args) >= 2){
+        std::wcout << L"Ошибка, неверный делиметр" << '\n';
+    }
+    return 0;
 }
 
 
 // функция для проверки введенных значений пользователем и вызовом нужных функций
-void checkCorrectness(int argc, char** argv) {
+void checkCorrectness(int argc, char* argv[]) {
     setlocale(LC_ALL, "rus");
     ArgumentsSTD argumentsStd;
-    if (argc == 1) {
+    if (argc < 2) {
         std::wcout << L"Извините, нужно ввести аргументы и имя файла" << "\n";
     }
     else {
         for (int i = 1; i < argc; i++) {
-            if (argv[i][0] == '-' && argv[i][1] == 'l' && argv[i][2] == '\0') {
-                argumentsStd.lines = (std::atoi(argv[i + 1]));
+            if (std::strcmp(argv[i], "-l") == 0){
+                argumentsStd.lines = std::atoll(argv[i + 1]);
                 i++;
-            } else if (argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == 'l' && argv[i][3] == 'i' &&
-                        argv[i][4] == 'n' && argv[i][5] == 'e' && argv[i][6] == 's' && argv[i][7] == '=') {
-                argumentsStd.lines = (std::stoi(charToInt(argv[i], 8)));
-
-            } else if (argv[i][0] == '-' && argv[i][1] == 't' && argv[i][2] == '\0') {
+            }
+            else if (std::strncmp(argv[i], "--lines=", 8) == 0){
+                argumentsStd.lines = std::atoll(argv[i] + 8);
+            }
+            else if (std::strcmp(argv[i], "-t") == 0) {
                 argumentsStd.from_tail = true;
-            } else if (argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == 't' && argv[i][3] == 'a' &&
-                        argv[i][4] == 'i' && argv[i][5] == 'l' && argv[i][6] == '\0') {
+            }
+            else if (std::strncmp(argv[i], "--tail", 6) == 0){
                 argumentsStd.from_tail = true;
-
                 // исправить
-            } else if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2] == '\0') {
-                argumentsStd.delimiter = argv[i + 1][0];
-                std::cout << argv[i + 1][0];
+            }
+            else if  (std::strcmp(argv[i], "-d") == 0) {
+                argumentsStd.delimiter = getDelimiter(argv[i + 1]);
                 i++;
-
-            } else if (argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == 'd' && argv[i][3] == 'e' &&
-                        argv[i][4] == 'l' && argv[i][5] == 'i' && argv[i][6] == 'm' && argv[i][7] == 'i' &&
-                        argv[i][8] == 't' && argv[i][9] == 'e' && argv[i][10] == 'r' && argv[i][11] == '=') {
-                argumentsStd.delimiter = argv[i][12];
-            } else {
+            }
+            else if (std::strncmp(argv[i], "--delimiter=", 12) == 0) {
+                argumentsStd.delimiter = getDelimiter(argv[i] + 12);
+            }
+            else {
                 argumentsStd.filename = argv[i];
             }
 
         }
     }
-    printFile(&argumentsStd);
+    if (argumentsStd.from_tail){
+        toEnd(&argumentsStd);
+    } else{
+        toBegin(&argumentsStd);
+    }
 }
 
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
     checkCorrectness(argc, argv);
     return 0;
 }
