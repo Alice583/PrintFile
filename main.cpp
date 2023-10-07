@@ -3,7 +3,6 @@
 #include <cstring>
 #include <limits>
 
-// tail
 
 struct ArgumentsSTD {
     unsigned long long lines = std::numeric_limits<unsigned long long>::max();
@@ -13,14 +12,14 @@ struct ArgumentsSTD {
 };
 
 
-void toBegin(ArgumentsSTD* argumentsStd) {
-    std::ifstream filenameForOpen(argumentsStd->filename);
+void FromStartToEnd(ArgumentsSTD* argumentsStd) {
+    std::ifstream filename_for_open(argumentsStd->filename, std::ios::binary);
     char symb;
-    if (!filenameForOpen) {
+    if (!filename_for_open) {
         std::wcout << L"Файл не открыт или введен неверно" << "\n";
     } else {
         if (argumentsStd->lines == -1) {
-            while (filenameForOpen.get(symb) && filenameForOpen.good()) {
+            while (filename_for_open.get(symb) && filename_for_open.good()) {
                 if (argumentsStd->delimiter != '\n' && symb == '\n') {
                     continue;
                 }
@@ -35,10 +34,7 @@ void toBegin(ArgumentsSTD* argumentsStd) {
         }
         else{
             int count = 1;
-            while (filenameForOpen.get(symb) && filenameForOpen.good() && count <= argumentsStd->lines){
-                if (argumentsStd->delimiter != '\n' && symb == '\n'){
-                    continue;
-                }
+            while (filename_for_open.get(symb) && filename_for_open.good() && count <= argumentsStd->lines){
                 std::cout << symb;
                 if (symb == argumentsStd->delimiter){
                     if (argumentsStd->delimiter != '\n'){
@@ -49,52 +45,40 @@ void toBegin(ArgumentsSTD* argumentsStd) {
             }
         }
     }
-    filenameForOpen.close();
+    filename_for_open.close();
 }
 
 
-void toEnd(ArgumentsSTD* argumentsStd){
+void FromEndToStart(ArgumentsSTD* argumentsStd) {
     unsigned long long count = 0;
     char ch;
-    std::ifstream filenameForOpen(argumentsStd->filename, std::ios::ate);
-    if (!filenameForOpen) {
+    std::ifstream filename_for_open(argumentsStd->filename, std::ios::ate | std::ios::binary);
+    if (!filename_for_open) {
         std::wcout << L"Файл не открыт или введен неверно" << "\n";
     }
-    while(count < argumentsStd->lines && filenameForOpen.good()) {
-        filenameForOpen.seekg(-1, std::ios::cur);
-        filenameForOpen.get(ch);
+    while(count < argumentsStd->lines && filename_for_open.good()) {
+        if (filename_for_open.tellg() == 0) {
+            break;
+        }
+        filename_for_open.seekg(-1, std::ios::cur);
+        filename_for_open.get(ch);
+        filename_for_open.seekg(-1, std::ios::cur);
         if (ch == argumentsStd->delimiter) {
-            std::cout << "this /n" << ch;
             count++;
         }
-        filenameForOpen.seekg(-1, std::ios::cur);
-        std::cout << ch;
     }
     char symb;
-    while (filenameForOpen.get(symb) && filenameForOpen.good()){
-//        if (argumentsStd->delimiter != '\n' && symb == '\n'){
-//            continue;
-//        }
+    filename_for_open.get(symb);
+    while (filename_for_open.get(symb) && filename_for_open.good()) {
         std::cout << symb;
-//        if (symb == argumentsStd->delimiter) {
-//            if (argumentsStd->delimiter != '\n') {
-//                std::cout << '\n';
-//            }
-//        }
+        if (symb == argumentsStd->delimiter) {
+
+        }
 
     }
-    filenameForOpen.close();
+    filename_for_open.close();
 }
 
-
-//unsigned long long charToInt(char* a, int count){
-//    char* num = nullptr;
-//    while (a[count] != '\0'){
-//        num += a[count];
-//        count++;
-//    }
-//    return std::stoull(num);
-//}
 
 
 char getDelimiter(char* args){
@@ -122,10 +106,9 @@ char getDelimiter(char* args){
 }
 
 
-// функция для проверки введенных значений пользователем и вызовом нужных функций
-void checkCorrectness(int argc, char* argv[]) {
+ArgumentsSTD CheckCorrectness(int argc, char* argv[], ArgumentsSTD argumentsStd) {
     setlocale(LC_ALL, "rus");
-    ArgumentsSTD argumentsStd;
+
     if (argc < 2) {
         std::wcout << L"Извините, нужно ввести аргументы и имя файла" << "\n";
     }
@@ -143,7 +126,6 @@ void checkCorrectness(int argc, char* argv[]) {
             }
             else if (std::strncmp(argv[i], "--tail", 6) == 0){
                 argumentsStd.from_tail = true;
-                // исправить
             }
             else if  (std::strcmp(argv[i], "-d") == 0) {
                 argumentsStd.delimiter = getDelimiter(argv[i + 1]);
@@ -158,16 +140,23 @@ void checkCorrectness(int argc, char* argv[]) {
 
         }
     }
-    if (argumentsStd.from_tail){
-        toEnd(&argumentsStd);
+    return argumentsStd;
+
+}
+
+void CheckDirection(ArgumentsSTD argumentsStd) {
+    if (argumentsStd.from_tail && argumentsStd.lines != -1){
+        FromEndToStart(&argumentsStd);
     } else{
-        toBegin(&argumentsStd);
+
+        FromStartToEnd(&argumentsStd);
     }
 }
 
-
 int main(int argc, char* argv[]) {
-    checkCorrectness(argc, argv);
+    ArgumentsSTD argumentsStd;
+    argumentsStd = CheckCorrectness(argc, argv, argumentsStd);
+    CheckDirection(argumentsStd);
     return 0;
 }
 
